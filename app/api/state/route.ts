@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
-import { list, put } from '@vercel/blob';
+import { put } from '@vercel/blob';
 
-const KEY = 'challenge/state.json';
 const empty = { Marcos: Array(7).fill(null), Belén: Array(7).fill(null) };
+const key = 'https://raw.githubusercontent.com/mcarrascosa11/belenvaaperder/main/data/state.json';
 
 export async function GET() {
   try {
-    const { blobs } = await list({ prefix: KEY });
-    if (!blobs[0]) return NextResponse.json(empty);
-    const res = await fetch(blobs[0].url, { cache: 'no-store' });
+    const res = await fetch(key, { cache: 'no-store' });
+    if (!res.ok) return NextResponse.json(empty);
     return NextResponse.json(await res.json());
   } catch {
     return NextResponse.json(empty);
@@ -18,7 +17,7 @@ export async function GET() {
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    await put(KEY, JSON.stringify(body), { access: 'public', addRandomSuffix: false, contentType: 'application/json', allowOverwrite: true });
+    await put('challenge/state.json', JSON.stringify(body), { access: 'public', addRandomSuffix: false, contentType: 'application/json' });
     return NextResponse.json(body);
   } catch {
     return NextResponse.json({ error: 'Storage not configured' }, { status: 500 });
