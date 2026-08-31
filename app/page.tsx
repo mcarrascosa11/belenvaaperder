@@ -29,30 +29,30 @@ export default function Home() {
   useEffect(() => { if (loaded) localStorage.setItem(KEY, JSON.stringify(scores)); }, [scores, loaded]);
 
   const totals = useMemo(() => ({ Marcos: total(scores.Marcos), Belén: total(scores.Belén) }), [scores]);
-  const played = useMemo(() => Math.max(...Object.values(scores).map(arr => arr.filter(Boolean).length)), [scores]);
+  const played = useMemo(() => Math.max(...Object.values(scores).map(arr => arr.filter(Boolean).length), 0), [scores]);
   const loser = played === 7 && totals.Marcos !== totals.Belén ? (totals.Marcos < totals.Belén ? 'Marcos' : 'Belén') : null;
 
   function save() {
     const n = Number(score.replace(/\D/g, ''));
-    if (!n || n < 0 || n > 25000) return;
+    if (!n || n > 25000) return;
     setScores(s => ({ ...s, [player]: s[player].map((x, i) => i === day - 1 ? { score: n, note: note.trim() || undefined } : x) }));
     setScore(''); setNote('');
   }
   function clearAll() { if (confirm('¿Borrar todas las puntuaciones?')) setScores(empty); }
   function copySummary() {
-    const rows = Array.from({length:7}, (_, i) => `${i+1}. ${scores.Marcos[i]?.score ?? '—'} | ${scores['Belén'][i]?.score ?? '—'}`).join('\n');
+    const rows = Array.from({length:7}, (_, i) => `${i+1}. ${scores.Marcos[i]?.score ?? '—'} | ${scores.Belén[i]?.score ?? '—'}`).join('\n');
     navigator.clipboard?.writeText(`BELÉN VA A PERDER\n${rows}\nTOTAL Marcos: ${totals.Marcos}\nTOTAL Belén: ${totals.Belén}`);
   }
 
   return <main>
     <div className="wrap">
-      <header><div><span className="eyebrow">GEOGUESSR · DAILY CHALLENGE</span><h1>BE LÉN VA A PERDER</h1><p>7 días. Una sola perdedora.</p></div><button className="ghost" onClick={copySummary}>Copiar marcador</button></header>
+      <header><div><span className="eyebrow">GEOGUESSR · DAILY CHALLENGE</span><h1>BELÉN VA A PERDER</h1><p>7 días. Una sola perdedora.</p></div><button className="ghost" onClick={copySummary}>Copiar marcador</button></header>
       <section className="hero">
         <div className="scorebox"><span>MARCOS</span><strong>{fmt(totals.Marcos)}</strong><small>{scores.Marcos.filter(Boolean).length}/7 días</small></div>
         <div className="vs">VS</div>
         <div className="scorebox"><span>BELÉN</span><strong>{fmt(totals.Belén)}</strong><small>{scores.Belén.filter(Boolean).length}/7 días</small></div>
       </section>
-      {loser && <div className="loser">🚨 EL RETO ES PARA <b>{loser.toUpperCase()}</b> 🚨</div>}
+      {loser && <div className="loser">EL RETO ES PARA <b>{loser.toUpperCase()}</b></div>}
       {!loser && <div className="status">{played === 0 ? 'EMPEZAD CUANDO QUERÁIS' : `DÍA ${played} · ${totals.Marcos === totals.Belén ? 'EMPATE' : totals.Marcos > totals.Belén ? 'MARCOS VA POR DELANTE' : 'BELÉN VA POR DELANTE'}`}</div>}
 
       <section className="card">
@@ -60,15 +60,15 @@ export default function Home() {
         <div className="formgrid">
           <label>Jugador<select value={player} onChange={e => setPlayer(e.target.value as Player)}><option>Marcos</option><option>Belén</option></select></label>
           <label>Día<select value={day} onChange={e => setDay(Number(e.target.value))}>{[1,2,3,4,5,6,7].map(d=><option key={d} value={d}>Día {d}</option>)}</select></label>
-          <label>Puntuación<input inputMode="numeric" value={score} onChange={e => setScore(e.target.value)} placeholder="Ej. 21.437" /></label>
-          <label>Nota <span className="muted">(opcional)</span><input value={note} onChange={e => setNote(e.target.value)} placeholder="He roto la racha…" /></label>
+          <label>Puntuación<input inputMode="numeric" value={score} onChange={e => setScore(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')save()}} placeholder="Ej. 21.437" /></label>
+          <label>Nota <span className="muted">(opcional)</span><input value={note} onChange={e => setNote(e.target.value)} /></label>
         </div>
         <button className="primary" onClick={save}>Guardar puntuación</button>
       </section>
 
       <section className="card tablecard">
         <div className="tablehead"><h2>Marcador</h2><button className="danger" onClick={clearAll}>Reiniciar</button></div>
-        <table><thead><tr><th>Día</th><th>Marcos</th><th>Belén</th><th>Ganador del día</th></tr></thead><tbody>
+        <table><thead><tr><th>Día</th><th>Marcos</th><th>Belén</th><th>Ganador</th></tr></thead><tbody>
           {[1,2,3,4,5,6,7].map(d => { const a=scores.Marcos[d-1]?.score, b=scores.Belén[d-1]?.score; return <tr key={d}><td>{d}</td><td>{a ? fmt(a) : '—'}</td><td>{b ? fmt(b) : '—'}</td><td>{a && b ? a === b ? 'Empate' : a > b ? 'Marcos' : 'Belén' : '—'}</td></tr> })}
           <tr className="total"><td>TOTAL</td><td>{fmt(totals.Marcos)}</td><td>{fmt(totals.Belén)}</td><td>{totals.Marcos===totals.Belén?'Empate':totals.Marcos>totals.Belén?'Marcos':'Belén'}</td></tr>
         </tbody></table>
