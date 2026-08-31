@@ -16,7 +16,11 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
-  const body = await req.json();
-  await put(KEY, JSON.stringify(body), { access: 'public', addRandomSuffix: false, contentType: 'application/json', allowOverwrite: true });
-  return NextResponse.json(body);
+  try {
+    const body = await req.json();
+    await put(KEY, JSON.stringify(body), { access: 'public', addRandomSuffix: false, contentType: 'application/json', allowOverwrite: true });
+    return NextResponse.json(body);
+  } catch {
+    return NextResponse.json({ error: 'Storage not configured' }, { status: 500 });
+  }
 }
